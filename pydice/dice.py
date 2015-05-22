@@ -78,7 +78,7 @@ class Die(object):
 class DN(Die):
     def __init__(self, size, *args, **kwargs):
         super(DN, self).__init__(faces=range(1, size+1), *args, **kwargs)
-        self._name = 'd{size}'.format(size=size)
+        self._name = 'Die (d{size})'.format(size=size)
 
 
 class Throw(object):
@@ -116,8 +116,8 @@ class Roll(object):
         return {
             'sum': self.sum,
             'total': self.total,
-            'throw_result': self.throw.result,
-            'throw_mod': self.total_mod
+            'faces': self.throw.result,
+            'throw_mod': self.total_mod,
             }
     
     @property
@@ -127,6 +127,10 @@ class Roll(object):
     @property
     def raw_dice(self):
         return self.dice + self._dropped_dice
+    
+    @property
+    def faces(self):
+        return self.throw.result
     
     @property
     def total(self):
