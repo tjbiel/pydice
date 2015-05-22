@@ -5,7 +5,7 @@ from random import choice
 class Die(object):
     def __init__(self, faces=range(1,7), mod=None,
                  above_okay=False, below_okay=False,
-                 name=None, roll_now=False):
+                 name=None, raw=None, roll_now=False):
         """
         Represents a die and the results of rolling it.
         
@@ -28,7 +28,7 @@ class Die(object):
         self.above_okay = above_okay
         self.below_okay = False
         self._name = name
-        self._raw = None
+        self._raw = raw
         
         if roll_now:
             self.roll()
@@ -82,13 +82,15 @@ class DN(Die):
 
 
 class Throw(object):
-    def __init__(self, dice):
+    def __init__(self, dice, roll_now=True):
         """
         Simulates throwing one or more Die objects and exposes a list of the
         results.
         """
         self.dice = dice
-        self.throw()
+        
+        if roll_now:
+            self.throw()
     
     @property
     def result(self):
@@ -99,9 +101,9 @@ class Throw(object):
 
 
 class Roll(object):
-    def __init__(self, dice, plus_pip=False, total_mod=0):
+    def __init__(self, dice, plus_pip=False, total_mod=0, roll_now=True):
         self.plus_pip = plus_pip
-        self.throw = Throw(dice)
+        self.throw = Throw(dice, roll_now)
         self.total_mod = total_mod
         
         # body is sum of 0 for 1, 1 for 2-5, and 2 for 6
