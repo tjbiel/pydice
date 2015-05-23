@@ -121,7 +121,7 @@ class Roll(object):
         return {
             'sum': self.sum,
             'total': self.total,
-            'faces': self.throw.result,
+            'faces': self.faces,
             'throw_mod': self.total_mod,
             }
     
@@ -135,7 +135,9 @@ class Roll(object):
     
     @property
     def faces(self):
-        return self.throw.result
+        # consider making this a sorted faces result?
+        f = lambda x, y: cmp(x.result, y.result)
+        return [d.result for d in sorted(self.dice, cmp=f)]
     
     @property
     def total(self):
@@ -203,6 +205,7 @@ def roll(string='1d6'):
             # keep the top rolls
             f = lambda x, y: cmp(y.result, x.result)
         else:
+            # keep the bottom rolls
             f = lambda x, y: cmp(x.result, y.result)
         
         s = sorted(r.dice, cmp=f)
