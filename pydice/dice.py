@@ -1,11 +1,14 @@
 import json, operator, re
 from random import choice
 
+ROLL_STRING_PATTERN = '(?P<n_dice>\d+)d(?P<x_size>\d+)(?P<keep>[\^v]{1}\d+)?(?P<mod>[+-]{1}\d+)?'
+
 
 class Die(object):
-    def __init__(self, faces=range(1,7), mod=None,
+    def __init__(self, faces=range(1,7), mod=0,
                  above_okay=False, below_okay=False,
-                 name=None, raw=None, roll_now=False):
+                 name=None, raw=None, roll_now=False,
+                 *args, **kwargs):
         """
         Represents a die and the results of rolling it.
         
@@ -39,18 +42,15 @@ class Die(object):
     
     @property
     def result(self):
-        if self.mod:
-            m = self.mod(self._raw)
-            if (m > self.high_face and
-                not self.above_okay):
-                return self.high_face
-            elif (m < self.low_face and
-                  not self.below_okay):
-                return self.low_face
-            else:
-                return m
+        r = self._raw + self.mod
+        if (r > self.high_face and
+            not self.above_okay):
+            return self.high_face
+        elif (r < self.low_face and
+                not self.below_okay):
+            return self.low_face
         else:
-            return self._raw
+            return r
     
     @property
     def name(self):
@@ -77,12 +77,13 @@ class Die(object):
 
 class DN(Die):
     def __init__(self, size, *args, **kwargs):
-        super(DN, self).__init__(faces=range(1, size+1), *args, **kwargs)
+        super(DN, self).__init__(faces=range(1, size+1),
+                                 *args, **kwargs)
         self._name = 'Die (d{size})'.format(size=size)
 
 
 class Throw(object):
-    def __init__(self, dice, roll_now=True):
+    def __init__(self, dice, roll_now=True, *args, **kwargs):
         """
         Simulates throwing one or more Die objects and exposes a list of the
         results.
@@ -101,13 +102,15 @@ class Throw(object):
 
 
 class Roll(object):
-    def __init__(self, dice, plus_pip=False, total_mod=0, roll_now=True):
+    def __init__(self, dice, plus_pip=False, total_mod=0,
+                 roll_now=True, n_dice=None, x_size=None,
+                 *args, **kwargs):
         self.plus_pip = plus_pip
         self.throw = Throw(dice, roll_now)
         self.total_mod = total_mod
+        self.n_dice = n_dice
+        self.x_size = x_size
         
-        # body is sum of 0 for 1, 1 for 2-5, and 2 for 6
-        self.body = self.evaluate(2, operator.ge) + self.evaluate(6)
         self._dropped_dice = []
     
     def evaluate(self, val, comp=operator.eq):
@@ -174,8 +177,7 @@ def roll(string='1d6'):
         '6d6^3': roll six six-sided dice and keep the 3 highest values
         
     """
-    p = '(?P<n_dice>\d+)d(?P<x_size>\d+)(?P<keep>[\^v]{1}\d+)?(?P<mod>[+-]{1}\d+)?'
-    m = re.match(p, string)
+    m = re.match(ROLL_STRING_PATTERN, string)
     if not m:
         raise Exception("Error parsing roll from string '{0}'".format(string))
     
@@ -189,6 +191,8 @@ def roll(string='1d6'):
     
     # get the roll instance
     r = roll_ndx(n_dice, x_size, mod)
+    r.n_dice = n_dice
+    r.x_size = x_size
     
     # check to see if this is a "best of" roll
     # e.g., 6d6 but keep the top 3: 6d6^3
