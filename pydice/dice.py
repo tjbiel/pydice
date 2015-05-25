@@ -42,15 +42,18 @@ class Die(object):
     
     @property
     def result(self):
-        r = self._raw + self.mod
-        if (r > self.high_face and
-            not self.above_okay):
-            return self.high_face
-        elif (r < self.low_face and
-                not self.below_okay):
-            return self.low_face
+        if self._raw is not None:
+            r = self._raw + self.mod
+            if (r > self.high_face and
+                not self.above_okay):
+                return self.high_face
+            elif (r < self.low_face and
+                    not self.below_okay):
+                return self.low_face
+            else:
+                return r
         else:
-            return r
+            return None
     
     @property
     def name(self):
@@ -135,7 +138,6 @@ class Roll(object):
     
     @property
     def faces(self):
-        # consider making this a sorted faces result?
         f = lambda x, y: cmp(x.result, y.result)
         return [d.result for d in sorted(self.dice, cmp=f)]
     
